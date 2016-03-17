@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+        "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+        "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+    <!-- 基础模块配置定义 -->
+    <definition name="adminBase.definition" template="/WEB-INF/jsp/layout.jsp">
+        <put-attribute name="floor-first" value="/WEB-INF/jsp/firstFloor.jsp"/>
+    </definition>
+
+    <!-- 404错误模块配置定义 -->
+    <definition name="errpage/*" extends="adminBase.definition">
+    <put-attribute name="body" value="/WEB-INF/jsp/404error.jsp"/>
+    </definition>
+
+</tiles-definitions>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!--redis连接池配置 -->
+    <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.MaxIdle}"/>
+        <property name="maxTotal" value="${redis.MaxTotal}"/>
+        <property name="maxWaitMillis" value="${redis.MaxWaitMillis}"/>
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+    </bean>
+
+
+    <!--Redis集群配置,需自己实现连接工厂 start-->
+    <bean id="jedisCluster" class="redis.clients.jedis.JedisCluster">
+        <constructor-arg index="0">
+            <set>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg type="java.lang.String" value="${redis.host4}"/>
+                    <constructor-arg type="int" value="${redis.port4}"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg type="java.lang.String" value="${redis.host5}"/>
+                    <constructor-arg type="int" value="${redis.port5}"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg type="java.lang.String" value="${redis.host6}"/>
+                    <constructor-arg type="int" value="${redis.port6}"/>
+                </bean>
+            </set>
+        </constructor-arg>
+        <constructor-arg index="1" value="15000" type="int"></constructor-arg>
+        <constructor-arg index="2" ref="poolConfig"></constructor-arg>
+    </bean>
+
+    <!--Redis集群配置 end-->
+
+
+</beans>

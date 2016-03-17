@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2010 The myBatis Team Licensed under the Apache License, Version 
+	2.0 (the "License"); you may not use this file except in compliance with 
+	the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+     http://www.springframework.org/schema/mvc 
+     http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+
+
+
+    <!-- 配置文件 strat-->
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:/config/jdbc.properties</value>
+            </list>
+        </property>
+    </bean>
+    <!-- 配置文件 end-->
+
+    <!--用来处理json格式 start -->
+    <bean id="jacksonMessageConverter"
+          class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+        <!-- 解决 HttpMediaTypeNotAcceptableException: Could not find acceptable representation -->
+        <property name="supportedMediaTypes">
+            <list>
+                <value>text/html;charset=UTF-8</value>
+            </list>
+        </property>
+    </bean>
+    <!--用来处理json格式 end -->
+
+    <!-- oracle 数据库数据配置 -->
+    <bean id="oracledataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass">
+            <value>${oracle.jdbc.driver}</value>
+        </property>
+        <property name="jdbcUrl">
+            <value>${oracle.jdbc.url}</value>
+        </property>
+        <property name="user">
+            <value>${oracle.jdbc.username}</value>
+        </property>
+        <property name="password">
+            <value>${oracle.jdbc.password}</value>
+        </property>
+        <property name="autoCommitOnClose" value="true"/>
+        <property name="initialPoolSize" value="1"/>
+        <property name="minPoolSize" value="10"/>
+        <property name="maxPoolSize" value="50"/>
+        <property name="maxIdleTime" value="60"/>
+        <property name="acquireIncrement" value="5"/>
+        <property name="maxIdleTimeExcessConnections" value="1800"/>
+        <property name="maxStatements" value="0"/>
+        <property name="idleConnectionTestPeriod" value="60"/>
+        <property name="acquireRetryAttempts" value="30"/>
+        <property name="breakAfterAcquireFailure" value="false"/>
+        <property name="testConnectionOnCheckout" value="false"/>
+        <property name="checkoutTimeout" value="0"/>
+
+    </bean>
+
+    <bean id="oracletransactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="oracledataSource"/>
+        <qualifier value="orcltest"/>
+    </bean>
+    <bean id="oraclesqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="oracledataSource"/>
+        <property name="typeAliasesPackage" value="com.mmbao.redis.dao.mybatis.domain.*"/>
+    </bean>
+    <!-- 自动扫描所有DAO层的XML -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.mmbao.redis.dao.mybatis.persistence"/>
+        <property name="sqlSessionFactoryBeanName" value="oraclesqlSessionFactory"/>
+    </bean>
+    <tx:annotation-driven transaction-manager="oracletransactionManager"/>
+    <!-- oracle 数据库数据配置 -->
+
+    <!-- 开启注解配置 -->
+    <context:annotation-config />
+
+    <!-- 扫描包 start-->
+    <context:component-scan base-package="com.mmbao.redis"/>
+    <!-- 扫描包 end-->
+
+    <!-- 允许注解配置事务 start -->
+    <tx:annotation-driven/>
+    <!-- 允许注解配置事务 end -->
+
+    <!-- 设置注解驱动 start-->
+    <mvc:annotation-driven/>
+    <!-- 设置注解驱动 end-->
+
+    <!--<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">-->
+        <!--<property name="prefix" value="/WEB-INF/jsp/" />-->
+        <!--<property name="suffix" value=".jsp" />-->
+    <!--</bean>-->
+
+    <!-- JSON Support Config start-->
+    <bean id="messageAdapter"
+          class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <!-- Support JSON -->
+                <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+            </list>
+        </property>
+    </bean>
+    <bean id="exceptionMessageAdapter"
+          class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerExceptionResolver">
+        <property name="messageConverters">
+            <list>
+                <!-- Support JSON -->
+                <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+            </list>
+        </property>
+    </bean>
+    <!-- JSON Support Config end-->
+
+    <!-- 经过下面的配置，该标签的作用就是：所有页面中引用"/css/**"的资源，都会从"/css/"里面进行查找 start-->
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    <mvc:resources mapping="/resource/**" location="/resource/"/>
+    <mvc:resources mapping="/upload/**" location="/upload/"/>
+    <mvc:default-servlet-handler/>
+    <!-- 经过下面的配置，该标签的作用就是：所有页面中引用"/css/**"的资源，都会从"/css/"里面进行查找 end-->
+
+    <!-- TilesView 框架 start-->
+    <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+        <property name="viewClass"
+                  value="org.springframework.web.servlet.view.tiles2.TilesView"/>
+    </bean>
+    <bean id="tilesConfigurer"
+          class="org.springframework.web.servlet.view.tiles2.TilesConfigurer">
+        <property name="definitions">
+            <list>
+                <value>/WEB-INF/adminPageConfig.xml</value>
+            </list>
+        </property>
+    </bean>
+    <!-- TilesView 框架 end-->
+
+    <!-- 国际化 start-->
+    <bean id="messageSource"
+          class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>messages</value>
+            </list>
+        </property>
+    </bean>
+    <!-- 国际化 end-->
+
+</beans>

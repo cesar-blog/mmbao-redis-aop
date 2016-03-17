@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!--redis连接池配置 -->
+    <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.MaxIdle}"/>
+        <property name="maxTotal" value="${redis.MaxTotal}"/>
+        <property name="maxWaitMillis" value="${redis.MaxWaitMillis}"/>
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+    </bean>
+
+
+    <!--Redis单机配置 start-->
+    <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool" destroy-method="destroy">
+    <constructor-arg index="0" ref="poolConfig"/>
+    <constructor-arg index="1">
+    <!--如果以后需要扩展集群，只需要复制一份redis,修改端口，然后在这里配置即可-->
+    <list>
+    <bean class="redis.clients.jedis.JedisShardInfo">
+    <constructor-arg index="0" value="172.21.99.125"/>
+    <constructor-arg index="1" value="6380"/>
+    <constructor-arg index="2" value="instance:01"/>
+    </bean>
+    <bean class="redis.clients.jedis.JedisShardInfo">
+    <constructor-arg index="0" value="172.21.99.125"/>
+    <constructor-arg index="1" value="6381"/>
+    <constructor-arg index="2" value="instance:02"/>
+    </bean>
+    <bean class="redis.clients.jedis.JedisShardInfo">
+    <constructor-arg index="0" value="172.21.99.125"/>
+    <constructor-arg index="1" value="6382"/>
+    <constructor-arg index="2" value="instance:03"/>
+    </bean>
+    </list>
+    </constructor-arg>
+    </bean>
+    <!--java帮我们同步sentinel的信息，将主从信息同步到客户端来-->
+    <bean class="redis.clients.jedis.JedisSentinelPool">
+    <constructor-arg index="0" value="mymaster"/>
+    <constructor-arg index="1">
+    <set>
+    <value>127.0.0.1:26379</value>
+    </set>
+    </constructor-arg>
+    <constructor-arg index="2" ref="poolConfig"/>
+    </bean>
+    <!--Redis单机配置 end-->
+
+
+
+
+</beans>
